@@ -1,0 +1,98 @@
+// Definição de constantes dos sensores ultrassônicos
+const int trigPin2 = 6;
+const int echoPin2 = 7;
+const int trigPin1 = 3;
+const int echoPin1 = 4;
+
+// Saídas para acionamento de vibração - têm que ser PWM
+const int vib1 = 9;
+const int vib2 = 10;
+
+
+// Código de inicialização - tudo nessa função é rodado uma vez no início do programa
+void setup() {
+
+  Serial.begin(9600);
+
+  pinMode(vib1, OUTPUT);
+  pinMode(vib2, OUTPUT);
+
+  pinMode(trigPin1, OUTPUT);
+  pinMode(echoPin1, INPUT);
+  pinMode(trigPin2, OUTPUT);
+  pinMode(echoPin2, INPUT);
+  
+  // Fazer o sistema vibrar duas vezes rapidamente no início do programa com intensidade 200/255
+
+  // Ligar vibração e esperar 100ms
+  analogWrite(vib1, 200);
+  analogWrite(vib2, 200);
+  delay(100);
+  // Desligar e esperar 100ms
+  analogWrite(vib1, 0);
+  analogWrite(vib2, 0);
+  delay(100);
+  // Ligar vibração e esperar 100ms
+  analogWrite(vib1, 200);
+  analogWrite(vib2, 200);
+  delay(100);
+  // Desligar vibração
+  analogWrite(vib1, 0);
+  analogWrite(vib2, 0);
+}
+
+
+void loop() {
+  int cont;
+  long int media;
+  // Medir distância, escrever valor correspondente na porta serial e ativar vibração
+  media=0;
+  for (cont=0;cont<10;cont++)
+  {
+  	int valSensor1 = medirDistancia(trigPin1, echoPin1);
+  	Serial.print("Valor 1: ");
+  	Serial.println(valSensor1);
+        media=media+valSensor1;
+   }
+   Serial.print(“Media sensor1: “);
+   Serial.println(media);
+
+
+  analogWrite(vib1, media);
+
+  int valSensor2 = medirDistancia(trigPin2, echoPin2);
+  Serial.print("Valor 2: ");
+  Serial.println(valSensor2);
+  analogWrite(vib2, valSensor2);
+
+  delay(500);  
+}
+
+
+// Definindo a função, não precisamos repetir o código toda vez que quisermos medir um sensor, e o código fica mais organizado
+int medirDistancia (int trigPin, int echoPin) {
+  
+  // Mandar pulso e esperar resposta
+  digitalWrite(trigPin1, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin1, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin1, LOW);
+  unsigned long duracao = pulseIn(echoPin2, HIGH);
+
+  // Calcular distancia a partir do tempo de resposta
+  const int fatorConstante = 58; // Valor obtido através de calibração dos sensores
+  int distancia = duracao/fatorConstante;
+  
+  // Transformar a faixa de 0-100cm em um valor que varia entre 0-255, de acordo com o que a vibração recebe
+  int valSensor = map(distancia, 0, 100, 0, 255);
+
+  return valSensor;
+}
+
+// Uma dica pra melhoramento do sistema de medição, pra depois que estiver funcional:
+// é possível aumentar a precisão da medição, diminuindo o chamado erro aleatório de medida,
+// usando uma média dos últimos valores obtidos no tempo, ao invés de usar a medida imediata.
+// testar o projeto com um vibracall, e depois se não for efetivo testar com 2
+
+
